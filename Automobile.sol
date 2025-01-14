@@ -1,45 +1,42 @@
-//SPDX-License-Identifier:UNLICENSED
+//SPDX-License-Identifier:MIT
 
-pragma solidity ^0.8.15;
+pragma solidity ^0.8.0;
 
-contract Automobile{
-    //state variables
+contract Automobile {
+    //State Varibales
     address public owner;
+    mapping(address => bool) public buyers;
     string public vehicleMake;
     string public vehicleModel;
-    uint public vehiclePrice;
-    bool public isBuyer;
-    mapping(address => bool) public buyers;
+    uint public price;
 
     //Events
-    event Purchased(address _buyer, uint _price, string _model, string _make);
+    event Purchase(address buyer, string make, string model, uint price);
 
-    constructor(){
+    //Constructor
+    constructor() {
         owner = msg.sender;
     }
 
-    modifier onlyOwner{
-        require(msg.sender == owner);
-        _;
-    }
-    function setPrice(uint price) public onlyOwner{
-        vehiclePrice = price * 1 ether;
-    }
-
-    function purchaseVehicle(string memory make, string memory model)public payable{
-        require(msg.value >= vehiclePrice);
-        require(!isBuyer);
-        vehicleMake = make;
-        vehicleModel = model;
+    //Functions
+    function buyVehicle(
+        string memory _make,
+        string memory _model
+    ) public payable {
+        require(msg.value >= price);
+        require(buyers[msg.sender] == false);
+        vehicleMake = _make;
+        vehicleModel = _model;
         buyers[msg.sender] = true;
+        emit Purchase(msg.sender, _make, _model, msg.value);
+    }
 
-        isBuyer = true;
-        emit Purchased(msg.sender, vehiclePrice,vehicleModel, vehicleMake);
+    function setPrice(uint _price) public {
+        require(msg.sender == owner);
+        price = _price;
     }
-    function withdrawSales() public onlyOwner{
-        payable(owner).transfer(address(this).balance);
-    }
-    function checkOwnership() public view returns(bool) {
+
+    function checkOwner() public view returns (bool) {
         return buyers[msg.sender];
     }
 }
